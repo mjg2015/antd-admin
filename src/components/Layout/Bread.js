@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Breadcrumb, Icon } from 'antd'
-import { Link } from 'dva/router'
+import { Link } from 'react-router-dom'
 import pathToRegexp from 'path-to-regexp'
 import { queryArray } from 'utils'
 import styles from './Bread.less'
@@ -24,6 +24,7 @@ const Bread = ({ menu, location }) => {
     }
   }
 
+  let paramMap = {}
   if (!current) {
     pathArray.push(menu[0] || {
       id: 1,
@@ -36,6 +37,17 @@ const Bread = ({ menu, location }) => {
     })
   } else {
     getPathArray(current)
+
+    let keys = []
+    let values = pathToRegexp(current.route, keys).exec(location.pathname.replace('#', ''))
+    if (keys.length) {
+      keys.forEach((currentValue, index) => {
+        if (typeof currentValue.name !== 'string') {
+          return
+        }
+        paramMap[currentValue.name] = values[index + 1]
+      })
+    }
   }
 
   // 递归查找父级
@@ -48,7 +60,7 @@ const Bread = ({ menu, location }) => {
     return (
       <Breadcrumb.Item key={key}>
         {((pathArray.length - 1) !== key)
-          ? <Link to={item.route}>
+          ? <Link to={pathToRegexp.compile(item.route || '')(paramMap) || '#'}>
             {content}
           </Link>
           : content}
